@@ -3,27 +3,55 @@
 #include<allegro5/allegro_color.h>
 #include<allegro5/allegro_primitives.h>
 
-ALLEGRO_DISPLAY* telaBaseDoGame;
+//Variáveis globais
+ALLEGRO_DISPLAY* telaBaseDoGame = NULL;
+ALLEGRO_TIMER* fps = NULL;
+ALLEGRO_EVENT_QUEUE* filaEventos = NULL;
 
 int larguraMonitor = 800;
 int alturaMonitor = 600;
 
-ALLEGRO_COLOR corFundo = al_map_rgb(1, 1, 0);
-ALLEGRO_COLOR corVermelha = al_map_rgb(255, 0, 0);
-ALLEGRO_COLOR corAzul = al_map_rgb(0, 0, 255);
-ALLEGRO_COLOR corVerde = al_map_rgb(0, 255, 0);
-ALLEGRO_COLOR cor = al_map_rgb(0, 01, 0);
-
 int main() {
+
+	//Inicialização do Allegro e dos Addons
+
     al_init();
 	al_init_primitives_addon();
+	al_init_image_addon();
+	al_install_keyboard();
+	al_install_mouse();
+
+	fps = al_create_timer(1.0 / 60);
     telaBaseDoGame = al_create_display(larguraMonitor, alturaMonitor);
-	for (int i = 0; i <= larguraMonitor; i+=10) {
-		al_draw_filled_rectangle(0, alturaMonitor-10, i, alturaMonitor, corAzul);
-		al_flip_display();
-		al_rest(0.001);
+	filaEventos = al_create_event_queue();
+
+	al_register_event_source(filaEventos, al_get_display_event_source(telaBaseDoGame));
+	al_register_event_source(filaEventos, al_get_timer_event_source(fps));
+	al_register_event_source(filaEventos, al_get_keyboard_event_source());
+	al_register_event_source(filaEventos, al_get_mouse_event_source());
+
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_flip_display();
+
+	al_start_timer(fps);
+
+	//Loop do jogo
+	while (true){
+
+		ALLEGRO_EVENT evento;
+		al_wait_for_event(filaEventos, &evento);
+
+		//Método que para o game quando se clica no X da janela
+		if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			break;
+		}
+
 	}
 
-    al_flip_display();
-    al_rest(10);
+	//Finalização do Allegro
+	al_destroy_display(telaBaseDoGame);
+	al_destroy_timer(fps);
+	al_destroy_event_queue(filaEventos);
+
+	return 0;
 }
