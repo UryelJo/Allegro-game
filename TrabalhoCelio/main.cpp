@@ -17,17 +17,22 @@
 
 
 //Variáveis globais do Allegro
-ALLEGRO_DISPLAY* telaBaseDoGame = NULL;
+ALLEGRO_DISPLAY* telaBaseDoGame = NULL, *mapaGame = NULL;
 ALLEGRO_TIMER* fps = NULL;
 ALLEGRO_EVENT_QUEUE* filaEventos = NULL;
 ALLEGRO_FONT* fonte = NULL;
 
 //Variáveis globais do jogo
-int larguraMonitor = 800;
-int alturaMonitor = 600;
+
+const int fpsGame = 60;
+
+const int larguraMapa = 1366;
+const int alturaMapa = 600;
 
 int main() {
 
+	
+	
 	//Inicialização do Allegro e dos Addons
     al_init();
 	al_init_font_addon();
@@ -38,12 +43,14 @@ int main() {
 
 	//Criação de objetos do Allegro
 	fonte = al_create_builtin_font();
-	fps = al_create_timer(1.0 / 60);
-    telaBaseDoGame = al_create_display(larguraMonitor, alturaMonitor);
+	fps = al_create_timer(1.0 / fpsGame);
+	mapaGame = al_create_display(larguraMapa, alturaMapa);
+    telaBaseDoGame = al_create_display(((int)larguraMapa*0.2), ((int) alturaMapa*0.2));
+
 	filaEventos = al_create_event_queue();
 
-	al_set_window_position(telaBaseDoGame, 200, 200);
-	al_set_window_title(telaBaseDoGame, "Trabalho de Computação Gráfica");
+	al_set_window_position(telaBaseDoGame, larguraMapa - larguraMapa, alturaMapa - (alturaMapa * 0.061));
+	al_set_window_title(telaBaseDoGame, "Trabalho de Computacao Grafica");
 
 	al_register_event_source(filaEventos, al_get_display_event_source(telaBaseDoGame));
 	al_register_event_source(filaEventos, al_get_timer_event_source(fps));
