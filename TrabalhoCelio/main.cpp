@@ -17,22 +17,33 @@
 
 
 //Variáveis globais do Allegro
-ALLEGRO_DISPLAY* telaBaseDoGame = NULL, *mapaGame = NULL;
-ALLEGRO_TIMER* fps = NULL;
-ALLEGRO_EVENT_QUEUE* filaEventos = NULL;
-ALLEGRO_FONT* fonte = NULL;
+ALLEGRO_DISPLAY *telaGame = NULL;
+ALLEGRO_TIMER *fps = NULL;
+ALLEGRO_EVENT_QUEUE *filaEventos = NULL;
+ALLEGRO_BITMAP *sprite = NULL, *bg = NULL;
+
+
+void contruirChao();
 
 //Variáveis globais do jogo
 
-const int fpsGame = 60;
+const float fpsGame = 60;
 
-const int larguraMapa = 1366;
-const int alturaMapa = 600;
+bool movendoParaEsquerda = false;
+bool movendoParaDireita = false;
+
+const int larguraMapa = 1920;
+const int alturaMapa = 1080;
+
+float frame = 0.f;
+int posicao_x = 0, posicao_y = alturaMapa-alturaMapa;
+int current_frame_y = 0;
+int cont = 0;
+
 
 int main() {
 
-	
-	
+
 	//Inicialização do Allegro e dos Addons
     al_init();
 	al_init_font_addon();
@@ -42,22 +53,20 @@ int main() {
 	al_install_mouse();
 
 	//Criação de objetos do Allegro
-	fonte = al_create_builtin_font();
 	fps = al_create_timer(1.0 / fpsGame);
-	mapaGame = al_create_display(larguraMapa, alturaMapa);
-    telaBaseDoGame = al_create_display(((int)larguraMapa*0.2), ((int) alturaMapa*0.2));
+	sprite = al_load_bitmap("./andandoF.png");
+	bg = al_load_bitmap("./Background.jpg");
 
+	al_set_new_display_flags(ALLEGRO_NOFRAME);
+	telaGame = al_create_display(larguraMapa, alturaMapa);
 	filaEventos = al_create_event_queue();
-
-	al_set_window_position(telaBaseDoGame, larguraMapa - larguraMapa, alturaMapa - (alturaMapa * 0.061));
-	al_set_window_title(telaBaseDoGame, "Trabalho de Computacao Grafica");
-
-	al_register_event_source(filaEventos, al_get_display_event_source(telaBaseDoGame));
+	
 	al_register_event_source(filaEventos, al_get_timer_event_source(fps));
 	al_register_event_source(filaEventos, al_get_keyboard_event_source());
 	al_register_event_source(filaEventos, al_get_mouse_event_source());
+	al_register_event_source(filaEventos, al_get_display_event_source(telaGame));
 
-	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_clear_to_color(al_map_rgb(255, 255, 255));
 	al_flip_display();
 
 	al_start_timer(fps);
@@ -66,22 +75,83 @@ int main() {
 	while (true){
 
 		ALLEGRO_EVENT evento;
-		al_wait_for_event_timed(filaEventos, &evento, 0.01);
+		al_wait_for_event(filaEventos, &evento);
+		
 
 		//Método que para o game quando se clica no X da janela
-		if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+		if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE ) {
 			break;
 		}
+		if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+			switch (evento.keyboard.keycode) {
+			case ALLEGRO_KEY_LEFT:
+				movendoParaEsquerda = true;
+				movendoParaDireita = false;
+				sprite = al_load_bitmap("./andandoT.png");
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				movendoParaDireita = true;
+				movendoParaEsquerda = false;
+				sprite = al_load_bitmap("./andandoF.png");
+				break;
+			}
+		}
 
-		al_clear_to_color(al_map_rgb(0, 0, 0));
-		al_draw_text(fonte, al_map_rgb(255, 255, 255), 10, 10, 0, "Hello World");
+		if(posicao_y < alturaMapa - 25){
+			posicao_y += 1;
+		}
+
+		if (movendoParaDireita) {
+			posicao_x += 3;
+			cont++;
+			if (cont == 17) {
+				frame += 96;
+				if (frame == 384) {
+					frame = 0;
+				}
+				cont = 0;
+			}
+		}
+		if (movendoParaEsquerda) {
+			posicao_x -= 3;
+			cont++;
+			if (cont == 17) {
+				frame += 96;
+				if (frame == 384) {
+					frame = 0;
+				}
+				cont = 0;
+			}
+		}
+
+		if (evento.type == ALLEGRO_EVENT_KEY_UP) {
+			switch (evento.keyboard.keycode) {
+			case ALLEGRO_KEY_LEFT:
+				movendoParaEsquerda = false;
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				movendoParaDireita = false;
+				break;
+			}
+		}
+
+		al_clear_to_color(al_map_rgb(255, 255, 255));
+
+		contruirChao();
+		
+		al_draw_bitmap_region(sprite, frame, current_frame_y, 96, 72, posicao_x, posicao_y, 0);
+		
 		al_flip_display();
 	}
 
 	//Finalização do Allegro
-	al_destroy_display(telaBaseDoGame);
+	al_destroy_bitmap(bg);
+	al_destroy_bitmap(sprite);
+	al_destroy_display(telaGame);
 	al_destroy_timer(fps);
 	al_destroy_event_queue(filaEventos);
+}
 
-	return 0;
+void contruirChao() {
+	al_draw_filled_rectangle(0, alturaMapa - 40, larguraMapa, alturaMapa, al_map_rgb(255, 0, 0));
 }
