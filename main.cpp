@@ -1,4 +1,7 @@
-// bibliotecas allegro
+//Classes Externas
+#include "Player.h"
+
+//bibliotecas allegro
 #include<allegro5/allegro.h>
 #include<allegro5/allegro_primitives.h>
 #include<allegro5/allegro_audio.h>
@@ -24,6 +27,7 @@ ALLEGRO_BITMAP *sprite = NULL, *bg = NULL;
 
 
 void contruirChao();
+void atualizarTela();
 
 //Variáveis globais do jogo
 
@@ -31,18 +35,23 @@ const float fpsGame = 60;
 
 bool movendoParaEsquerda = false;
 bool movendoParaDireita = false;
+bool agachadoDireita = false;
+bool agachadoEsquerda = false;
+
+bool agachar = false;
 
 const int larguraMapa = 1920;
 const int alturaMapa = 1080;
 
 float frame = 0.f;
-int posicao_x = 0, posicao_y = alturaMapa-alturaMapa;
+int larguraFrame = 78, alturaFrame = 72;
+int posicao_x = 0, posicao_y = alturaMapa*0.3;
 int current_frame_y = 0;
 int cont = 0;
+int cont2 = 0;
 
 
 int main() {
-
 
 	//Inicialização do Allegro e dos Addons
     al_init();
@@ -54,7 +63,7 @@ int main() {
 
 	//Criação de objetos do Allegro
 	fps = al_create_timer(1.0 / fpsGame);
-	sprite = al_load_bitmap("./andandoF.png");
+	sprite = al_load_bitmap("./ParadoF");
 	bg = al_load_bitmap("./Background.jpg");
 
 	al_set_new_display_flags(ALLEGRO_NOFRAME);
@@ -78,8 +87,8 @@ int main() {
 		al_wait_for_event(filaEventos, &evento);
 		
 
-		//Método que para o game quando se clica no X da janela
-		if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE ) {
+		//Método que para o game quando se clica no ESC da janela
+		if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
 			break;
 		}
 		if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -87,18 +96,29 @@ int main() {
 			case ALLEGRO_KEY_LEFT:
 				movendoParaEsquerda = true;
 				movendoParaDireita = false;
+				agachadoEsquerda = true;
+				larguraFrame = 96;
 				sprite = al_load_bitmap("./andandoT.png");
 				break;
 			case ALLEGRO_KEY_RIGHT:
 				movendoParaDireita = true;
 				movendoParaEsquerda = false;
+				agachadoDireita = true;
+				larguraFrame = 96;
 				sprite = al_load_bitmap("./andandoF.png");
 				break;
+			case ALLEGRO_KEY_DOWN:
+				agachar = true;
+				
+				break;
+
+
 			}
 		}
 
-		if(posicao_y < alturaMapa - 25){
-			posicao_y += 1;
+		//Gravidade
+		if(posicao_y < alturaMapa*0.61){
+			posicao_y += 4.5;
 		}
 
 		if (movendoParaDireita) {
@@ -124,24 +144,52 @@ int main() {
 			}
 		}
 
+		if (agachar) {
+			//larguraFrame = 86;
+		//	alturaFrame = 64;
+		//	if (agachadoDireita) {
+		//		sprite = al_load_bitmap("./agacharF.png");
+		//		frame = 0;
+			//}
+			//if (agachadoEsquerda) {
+			//	sprite = al_load_bitmap("./agacharT.png");
+			//	frame = 86;
+			//}
+			frame = 0;
+			larguraFrame = 86;
+			alturaFrame = 128;
+			sprite = al_load_bitmap("./agacharF.png");
+			al_draw_bitmap_region(sprite, frame, current_frame_y, larguraFrame, alturaFrame, posicao_x, posicao_y, 0);
+			atualizarTela();
+		}
+
 		if (evento.type == ALLEGRO_EVENT_KEY_UP) {
 			switch (evento.keyboard.keycode) {
+			case ALLEGRO_KEY_DOWN:
+				agachar = false;
+				break;
 			case ALLEGRO_KEY_LEFT:
 				movendoParaEsquerda = false;
+				agachadoEsquerda = false;
 				break;
 			case ALLEGRO_KEY_RIGHT:
 				movendoParaDireita = false;
+				agachadoDireita = false;
 				break;
 			}
+			larguraFrame = 78;
+			alturaFrame = 72;
+			sprite = al_load_bitmap("./Parado.png");
+			al_draw_bitmap_region(sprite, frame, current_frame_y, larguraFrame, alturaFrame, posicao_x, posicao_y, 0);
 		}
 
 		al_clear_to_color(al_map_rgb(255, 255, 255));
 
 		contruirChao();
 		
-		al_draw_bitmap_region(sprite, frame, current_frame_y, 96, 72, posicao_x, posicao_y, 0);
+		al_draw_bitmap_region(sprite, frame, current_frame_y, larguraFrame, alturaFrame, posicao_x, posicao_y, 0);
 		
-		al_flip_display();
+		atualizarTela();
 	}
 
 	//Finalização do Allegro
@@ -153,5 +201,9 @@ int main() {
 }
 
 void contruirChao() {
-	al_draw_filled_rectangle(0, alturaMapa - 40, larguraMapa, alturaMapa, al_map_rgb(255, 0, 0));
+	al_draw_filled_rectangle(0, alturaMapa*0.65, larguraMapa, alturaMapa, al_map_rgb(255, 0, 0));
+}
+
+void atualizarTela() {
+	al_flip_display();
 }
