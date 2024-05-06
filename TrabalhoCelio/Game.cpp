@@ -13,16 +13,20 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_video.h>
+#include <vector>
 
 //Include das bibliotecas C++
 #include <iostream>
+#include "Projetil.h"
 
 ALLEGRO_DISPLAY *telaGame = NULL;
 ALLEGRO_TIMER *fps = NULL;
 ALLEGRO_EVENT_QUEUE* filaEventos = NULL;
 ALLEGRO_SAMPLE* music = NULL;
+ALLEGRO_SAMPLE* shot = NULL;
 
 int delayAnimacao = 0;
+std::vector<Projectile> projectiles;
 
 Mapa mapa = Mapa();
 Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - mapa.alturaTela, Moveset(), 0);
@@ -33,6 +37,8 @@ void atualizarLimparDesenharGame();
 void inicializarAudio();
 
 void testeColisao(int representacaoMapa[24][44]);
+
+void atirar();
 
 int main()
 {
@@ -85,6 +91,9 @@ int main()
 				player.movesetPlayer.movendoDireita = false;
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
+				break;
+			case ALLEGRO_KEY_SPACE:
+				atirar();
 				break;
 			}
 		}
@@ -178,17 +187,38 @@ void encerramento()
 	al_destroy_bitmap(mapa.backgroundTela);
 	al_destroy_bitmap(mapa.chao.imagemChao);
 	al_destroy_sample(music);
+	al_destroy_sample(shot);
 	al_destroy_timer(fps);
 	al_destroy_event_queue(filaEventos);
 }
 
 void atualizarLimparDesenharGame()
 {
-	al_clear_to_color(al_map_rgb(255, 255, 255));
-	al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
-	mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
-	al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
-	al_flip_display();
+    int i = 0;
+    al_clear_to_color(al_map_rgb(255, 255, 255));
+    al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
+    mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
+    al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
+    for (auto it = projectiles.begin(); it != projectiles.end();)
+    {
+        Projectile& projectile = *it;
+        i += 1;
+        projectile.x += projectile.x_velocity;
+        projectile.y += projectile.y_velocity;
+        al_draw_bitmap(projectile.image, projectile.x, projectile.y, 0);
+		if (projectile.isOutOfBounds(mapa.larguraTela, mapa.alturaTela))
+		{
+			std::cout << "Deleted projectile " << i << std::endl;
+			al_destroy_bitmap(projectile.image); // Deallocate the memory used by the bitmap
+			it = projectiles.erase(it);
+			std::cout << "Number of projectiles: " << projectiles.size() << std::endl;
+		}
+        else
+        {
+            ++it;
+        }
+    }
+    al_flip_display();
 }
 
 void inicializarAudio() {
@@ -197,9 +227,14 @@ void inicializarAudio() {
 		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao carregar o audio", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return;
 	}
+	shot = al_load_sample("Assets/audio/shot.ogg");
+	if (!shot) {
+		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao carregar o audio de tiro", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return;
+	}
 
 	// Play the sound file
-	al_reserve_samples(1);
+	al_reserve_samples(20);
 	al_play_sample(music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, 0);
 }
 
@@ -222,4 +257,19 @@ void testeColisao(int representacaoMapa[24][44])
             }
         }
     }
+}
+
+void atirar()
+{
+	al_play_sample(shot, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0);
+	// Create a new projectile at the player's position
+	Projectile proj = Projectile(player.posicao_x_tela, player.posicao_y_tela, 5, 0, al_load_bitmap("Assets/Images/Tile_06.png"));
+	// Add the projectile to the list of projectiles
+	projectiles.push_back(proj); // Uncomment this line to add the projectile to the list
+
+	Projectile& newProjectile = projectiles.back();
+	// Set the velocity of the projectile
+	newProjectile.x_velocity = 5; // Adjust the velocity as needed
+	newProjectile.y_velocity = 0; // Adjust the velocity as needed
+	
 }
