@@ -25,14 +25,15 @@ ALLEGRO_SAMPLE* music = NULL;
 int delayAnimacao = 0;
 
 Mapa mapa = Mapa();
-Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - mapa.alturaTela, Moveset(), 0);
+Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - 100, Moveset(), 0);
 
 void inicializacao();
 void encerramento();
 void atualizarLimparDesenharGame();
 void inicializarAudio();
+void puloPersonagem();
 
-void testeColisao(int representacaoMapa[24][44]);
+void testeColisao(int representacaoMapa[24][43]);
 
 int main()
 {
@@ -40,7 +41,16 @@ int main()
 
 	player.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Parado.png"));
 	mapa.carregarBackground(al_load_bitmap("Assets/Images/background.jpg"));
-	mapa.chao.carregarImagemChao(al_load_bitmap("Assets/Images/Tile_02.png"));
+	mapa.chao.carregarImagemChao1(al_load_bitmap("Assets/Images/SpritesChao/Tile_01.png"));
+	mapa.chao.carregarImagemChao2(al_load_bitmap("Assets/Images/SpritesChao/Tile_02.png"));
+	mapa.chao.carregarImagemChao3(al_load_bitmap("Assets/Images/SpritesChao/Tile_03.png"));
+	mapa.chao.carregarImagemChao4(al_load_bitmap("Assets/Images/SpritesChao/Tile_04.png"));
+	mapa.chao.carregarImagemChao5(al_load_bitmap("Assets/Images/SpritesChao/Tile_05.png"));
+	mapa.chao.carregarImagemChao6(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_01.png"));
+	mapa.chao.carregarImagemChao7(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_02.png"));
+	mapa.chao.carregarImagemChao8(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_03.png"));
+	mapa.chao.carregarImagemChao9(al_load_bitmap("Assets/Images/SpritesChao/Tile_06.png"));
+	mapa.chao.carregarImagemChao10(al_load_bitmap("Assets/Images/SpritesChao/Tile_07.png"));
 	
 	al_clear_to_color(al_map_rgb(255, 255, 255));
 	al_flip_display();
@@ -86,10 +96,13 @@ int main()
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
 				break;
+			case ALLEGRO_KEY_SPACE:
+				puloPersonagem();
+				break;
 			}
 		}
 
-		player.movimentacao();
+		player.movimentacao(mapa.larguraTela);
 		testeColisao(mapa.representacaoMapa);
 
 		if (evento.type == ALLEGRO_EVENT_KEY_UP) 
@@ -176,7 +189,6 @@ void encerramento()
 	al_destroy_display(telaGame);
 	al_destroy_bitmap(player.imagemPersonagem);
 	al_destroy_bitmap(mapa.backgroundTela);
-	al_destroy_bitmap(mapa.chao.imagemChao);
 	al_destroy_sample(music);
 	al_destroy_timer(fps);
 	al_destroy_event_queue(filaEventos);
@@ -198,28 +210,68 @@ void inicializarAudio() {
 		return;
 	}
 
-	// Play the sound file
 	al_reserve_samples(1);
 	al_play_sample(music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, 0);
 }
 
-void testeColisao(int representacaoMapa[24][44])
+void testeColisao(int representacaoMapa[24][43])
 {
 	player.posicao_y_tela += 10;
     for (int y = 0; y <= (mapa.alturaTela / mapa.chao.tamanho); y++)
     {
         for (int x = 0; x <= (mapa.larguraTela / mapa.chao.tamanho); x++)
         {
-            if (representacaoMapa[y][x] == 1)
+            if (representacaoMapa[y][x] == 1 || representacaoMapa[y][x] == 2 || representacaoMapa[y][x] == 3 || representacaoMapa[y][x] == 9 || representacaoMapa[y][x] == 10 )
             {
-				if ((player.posicao_x_tela+46) > (x*mapa.chao.tamanho)) 
+				if (player.posicao_x_tela < (x * mapa.chao.tamanho) + mapa.chao.tamanho 
+					&& (player.posicao_x_tela + 55) >(x * mapa.chao.tamanho)
+					&& player.posicao_y_tela + 20 < (y * mapa.chao.tamanho) + mapa.chao.tamanho 
+					&& (player.posicao_y_tela + player.alturaPlayer) > (y * mapa.chao.tamanho))
 				{
-					if ((player.posicao_y_tela + player.alturaPlayer) > (y * mapa.chao.tamanho)) 
-					{
-						player.posicao_y_tela = (y * mapa.chao.tamanho) - player.alturaPlayer;
-					}
+					player.posicao_y_tela = (y * mapa.chao.tamanho) - player.alturaPlayer;
 				}
             }
         }
     }
+}
+
+void puloPersonagem() {
+	if (player.movesetPlayer.pulando == false && player.movesetPlayer.caindo == false)
+	{
+		player.movesetPlayer.pulando = true;
+		player.movesetPlayer.caindo = false;
+		for (int i = 0; i < 100; i++)
+		{
+			player.posicao_y_tela -= 0.9f;
+			if (player.movesetPlayer.movendoDireita) {
+				if (player.posicao_x_tela < mapa.larguraTela - 75) {
+					player.posicao_x_tela += 0.5f;
+				}
+			}
+			if (player.movesetPlayer.movendoEsquerda) {
+				if (player.posicao_x_tela > 0) {
+					player.posicao_x_tela -= 0.5f;
+				}
+			}
+			atualizarLimparDesenharGame();
+		}
+		player.movesetPlayer.pulando = false;
+		player.movesetPlayer.caindo = true;
+		for (int i = 0; i < 100; i++)
+		{
+			player.posicao_y_tela += 0.5f;
+			if (player.movesetPlayer.movendoDireita) {
+				if (player.posicao_x_tela < mapa.larguraTela - 75) {
+					player.posicao_x_tela += 0.5f;
+				}
+			}
+			if (player.movesetPlayer.movendoEsquerda) {
+				if (player.posicao_x_tela > 0) {
+					player.posicao_x_tela -= 0.5f;
+				}
+			}
+			atualizarLimparDesenharGame();
+		}
+		player.movesetPlayer.caindo = false;
+	}
 }
