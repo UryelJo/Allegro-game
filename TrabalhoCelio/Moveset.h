@@ -18,8 +18,9 @@ class Moveset
 		bool morteDireita = false;
 
 		bool pulando = false;
+		bool caindo = false;
 
-		bool voando = false;
+		float acelaracaoPuloY = 0.5f;
 
 		Moveset() {};
 };
