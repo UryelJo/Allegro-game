@@ -292,7 +292,8 @@ void atirar()
 		newProjectile.x_velocity = -5;
 	}
 	newProjectile.y_velocity = 0; // Adjust the velocity as needed
-	
+}
+
 void puloPersonagem() {
 	if (player.movesetPlayer.pulando == false && player.movesetPlayer.caindo == false)
 	{
