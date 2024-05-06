@@ -31,6 +31,8 @@ std::vector<Projectile> projectiles;
 Mapa mapa = Mapa();
 Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - mapa.alturaTela, Moveset(), 0);
 
+bool lastMove = true; //false = left, true = right
+
 void inicializacao();
 void encerramento();
 void atualizarLimparDesenharGame();
@@ -70,24 +72,28 @@ int main()
 			{
 			case ALLEGRO_KEY_LEFT:
 				player.movesetPlayer.movendoEsquerda = true;
+				lastMove = false;
 				player.movesetPlayer.movendoDireita = false;
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_RIGHT:
 				player.movesetPlayer.movendoDireita = true;
+				lastMove = true;
 				player.movesetPlayer.movendoEsquerda = false;
 				player.flags = 0;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_D:
 				player.movesetPlayer.movendoDireita = true;
+				lastMove = true;
 				player.movesetPlayer.movendoEsquerda = false;
 				player.flags = 0;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_A:
 				player.movesetPlayer.movendoEsquerda = true;
+				lastMove = false;
 				player.movesetPlayer.movendoDireita = false;
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
@@ -205,13 +211,13 @@ void atualizarLimparDesenharGame()
         i += 1;
         projectile.x += projectile.x_velocity;
         projectile.y += projectile.y_velocity;
-        al_draw_bitmap(projectile.image, projectile.x, projectile.y, 0);
+        al_draw_bitmap(projectile.image, projectile.x + 50, projectile.y, 0);
 		if (projectile.isOutOfBounds(mapa.larguraTela, mapa.alturaTela))
 		{
-			std::cout << "Deleted projectile " << i << std::endl;
+			std::cout << "Destroyed a projectile"<< std::endl;
 			al_destroy_bitmap(projectile.image); // Deallocate the memory used by the bitmap
 			it = projectiles.erase(it);
-			std::cout << "Number of projectiles: " << projectiles.size() << std::endl;
+			std::cout << "Number of projectiles left: " << projectiles.size() << std::endl;
 		}
         else
         {
@@ -263,13 +269,18 @@ void atirar()
 {
 	al_play_sample(shot, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0);
 	// Create a new projectile at the player's position
-	Projectile proj = Projectile(player.posicao_x_tela, player.posicao_y_tela, 5, 0, al_load_bitmap("Assets/Images/Tile_06.png"));
+	Projectile proj = Projectile(player.posicao_x_tela, player.posicao_y_tela + 32, 5, 0, al_load_bitmap("Assets/Images/red_laser.png"));
 	// Add the projectile to the list of projectiles
 	projectiles.push_back(proj); // Uncomment this line to add the projectile to the list
 
 	Projectile& newProjectile = projectiles.back();
 	// Set the velocity of the projectile
-	newProjectile.x_velocity = 5; // Adjust the velocity as needed
+	if (lastMove) {
+		newProjectile.x_velocity = 5;
+	}
+	else {
+		newProjectile.x_velocity = -5;
+	}
 	newProjectile.y_velocity = 0; // Adjust the velocity as needed
 	
 }

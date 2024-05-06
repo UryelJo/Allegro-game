@@ -16,7 +16,5 @@ public:
     float speed;           // Projectile's speed
     float angle;           // Projectile's direction (optional for angled movement)
 	float x_velocity;
-	float y_velocity;
-
-private:
+    float y_velocity;
 };
