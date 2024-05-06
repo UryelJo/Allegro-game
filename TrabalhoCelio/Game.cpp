@@ -1,4 +1,4 @@
-//Include dos arquivos de cabeçalho
+//Include dos arquivos de cabeÃ§alho
 #include "Entity.h"
 #include "Mapa.h"
 
@@ -29,7 +29,7 @@ int delayAnimacao = 0;
 std::vector<Projectile> projectiles;
 
 Mapa mapa = Mapa();
-Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - mapa.alturaTela, Moveset(), 0);
+Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - 100, Moveset(), 0);
 
 bool lastMove = true; //false = left, true = right
 
@@ -37,8 +37,9 @@ void inicializacao();
 void encerramento();
 void atualizarLimparDesenharGame();
 void inicializarAudio();
+void puloPersonagem();
 
-void testeColisao(int representacaoMapa[24][44]);
+void testeColisao(int representacaoMapa[24][43]);
 
 void atirar();
 
@@ -48,7 +49,16 @@ int main()
 
 	player.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Parado.png"));
 	mapa.carregarBackground(al_load_bitmap("Assets/Images/background.jpg"));
-	mapa.chao.carregarImagemChao(al_load_bitmap("Assets/Images/Tile_02.png"));
+	mapa.chao.carregarImagemChao1(al_load_bitmap("Assets/Images/SpritesChao/Tile_01.png"));
+	mapa.chao.carregarImagemChao2(al_load_bitmap("Assets/Images/SpritesChao/Tile_02.png"));
+	mapa.chao.carregarImagemChao3(al_load_bitmap("Assets/Images/SpritesChao/Tile_03.png"));
+	mapa.chao.carregarImagemChao4(al_load_bitmap("Assets/Images/SpritesChao/Tile_04.png"));
+	mapa.chao.carregarImagemChao5(al_load_bitmap("Assets/Images/SpritesChao/Tile_05.png"));
+	mapa.chao.carregarImagemChao6(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_01.png"));
+	mapa.chao.carregarImagemChao7(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_02.png"));
+	mapa.chao.carregarImagemChao8(al_load_bitmap("Assets/Images/SpritesChao/Tile_02_03.png"));
+	mapa.chao.carregarImagemChao9(al_load_bitmap("Assets/Images/SpritesChao/Tile_06.png"));
+	mapa.chao.carregarImagemChao10(al_load_bitmap("Assets/Images/SpritesChao/Tile_07.png"));
 	
 	al_clear_to_color(al_map_rgb(255, 255, 255));
 	al_flip_display();
@@ -99,12 +109,15 @@ int main()
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_SPACE:
-				atirar();
+				puloPersonagem();
 				break;
+      case ALLEGRO_KEY_F:
+        atirar();
+        break;
 			}
 		}
 
-		player.movimentacao();
+		player.movimentacao(mapa.larguraTela);
 		testeColisao(mapa.representacaoMapa);
 
 		if (evento.type == ALLEGRO_EVENT_KEY_UP) 
@@ -139,7 +152,7 @@ int main()
 
 void inicializacao() 
 {
-	//Inicialização do Allegro e dos Addons
+	//InicializaÃ§Ã£o do Allegro e dos Addons
 	al_init();
 	al_init_font_addon();
 	al_init_primitives_addon();
@@ -152,7 +165,7 @@ void inicializacao()
 	al_init_native_dialog_addon();
 	al_init_video_addon();
 
-	//Inicialização do Display
+	//InicializaÃ§Ã£o do Display
 	al_set_new_display_flags(ALLEGRO_NOFRAME);
 	telaGame = al_create_display(mapa.larguraTela, mapa.alturaTela);
 	if (!telaGame) 
@@ -161,14 +174,14 @@ void inicializacao()
 		return;
 	}
 
-	//Inicialização do Timer do Game
+	//InicializaÃ§Ã£o do Timer do Game
 	fps = al_create_timer(1.0 / mapa.fpsGame);
 	if (!fps) {
 		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao criar o timer", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return;
 	}
 
-	//Inicialização da Fila de Eventos
+	//InicializaÃ§Ã£o da Fila de Eventos
 	filaEventos = al_create_event_queue();
 	if (!filaEventos) 
 	{
@@ -181,7 +194,7 @@ void inicializacao()
 	al_register_event_source(filaEventos, al_get_timer_event_source(fps));
 	al_register_event_source(filaEventos, al_get_keyboard_event_source());
 
-	//Inicialização do Audio
+	//InicializaÃ§Ã£o do Audio
 	inicializarAudio();
 }
 
@@ -191,7 +204,6 @@ void encerramento()
 	al_destroy_display(telaGame);
 	al_destroy_bitmap(player.imagemPersonagem);
 	al_destroy_bitmap(mapa.backgroundTela);
-	al_destroy_bitmap(mapa.chao.imagemChao);
 	al_destroy_sample(music);
 	al_destroy_sample(shot);
 	al_destroy_timer(fps);
@@ -238,27 +250,25 @@ void inicializarAudio() {
 		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao carregar o audio de tiro", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return;
 	}
-
-	// Play the sound file
 	al_reserve_samples(20);
 	al_play_sample(music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, 0);
 }
 
-void testeColisao(int representacaoMapa[24][44])
+void testeColisao(int representacaoMapa[24][43])
 {
 	player.posicao_y_tela += 10;
     for (int y = 0; y <= (mapa.alturaTela / mapa.chao.tamanho); y++)
     {
         for (int x = 0; x <= (mapa.larguraTela / mapa.chao.tamanho); x++)
         {
-            if (representacaoMapa[y][x] == 1)
+            if (representacaoMapa[y][x] == 1 || representacaoMapa[y][x] == 2 || representacaoMapa[y][x] == 3 || representacaoMapa[y][x] == 9 || representacaoMapa[y][x] == 10 )
             {
-				if ((player.posicao_x_tela+46) > (x*mapa.chao.tamanho)) 
+				if (player.posicao_x_tela < (x * mapa.chao.tamanho) + mapa.chao.tamanho 
+					&& (player.posicao_x_tela + 55) >(x * mapa.chao.tamanho)
+					&& player.posicao_y_tela + 20 < (y * mapa.chao.tamanho) + mapa.chao.tamanho 
+					&& (player.posicao_y_tela + player.alturaPlayer) > (y * mapa.chao.tamanho))
 				{
-					if ((player.posicao_y_tela + player.alturaPlayer) > (y * mapa.chao.tamanho)) 
-					{
-						player.posicao_y_tela = (y * mapa.chao.tamanho) - player.alturaPlayer;
-					}
+					player.posicao_y_tela = (y * mapa.chao.tamanho) - player.alturaPlayer;
 				}
             }
         }
@@ -283,4 +293,43 @@ void atirar()
 	}
 	newProjectile.y_velocity = 0; // Adjust the velocity as needed
 	
+void puloPersonagem() {
+	if (player.movesetPlayer.pulando == false && player.movesetPlayer.caindo == false)
+	{
+		player.movesetPlayer.pulando = true;
+		player.movesetPlayer.caindo = false;
+		for (int i = 0; i < 100; i++)
+		{
+			player.posicao_y_tela -= 0.9f;
+			if (player.movesetPlayer.movendoDireita) {
+				if (player.posicao_x_tela < mapa.larguraTela - 75) {
+					player.posicao_x_tela += 0.5f;
+				}
+			}
+			if (player.movesetPlayer.movendoEsquerda) {
+				if (player.posicao_x_tela > 0) {
+					player.posicao_x_tela -= 0.5f;
+				}
+			}
+			atualizarLimparDesenharGame();
+		}
+		player.movesetPlayer.pulando = false;
+		player.movesetPlayer.caindo = true;
+		for (int i = 0; i < 100; i++)
+		{
+			player.posicao_y_tela += 0.5f;
+			if (player.movesetPlayer.movendoDireita) {
+				if (player.posicao_x_tela < mapa.larguraTela - 75) {
+					player.posicao_x_tela += 0.5f;
+				}
+			}
+			if (player.movesetPlayer.movendoEsquerda) {
+				if (player.posicao_x_tela > 0) {
+					player.posicao_x_tela -= 0.5f;
+				}
+			}
+			atualizarLimparDesenharGame();
+		}
+		player.movesetPlayer.caindo = false;
+	}
 }

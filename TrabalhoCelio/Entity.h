@@ -37,7 +37,7 @@ class Entity
 		}
 
 		void carregarImagemPersonagem(ALLEGRO_BITMAP* imagemPersonagem);
-		void movimentacao();
+		void movimentacao(int larguraTela);
 		void movimentacaoParado();
 };
 
@@ -45,17 +45,21 @@ void Entity::carregarImagemPersonagem(ALLEGRO_BITMAP* imagemPersonagem) {
 	this->imagemPersonagem = imagemPersonagem;
 }
 
-void Entity::movimentacao() {
+void Entity::movimentacao(int larguraTela) {
 	if (this->movesetPlayer.movendoEsquerda || this->movesetPlayer.movendoDireita) 
 	{
 		this->imagemPersonagem = al_load_bitmap("Assets/Images/Andando.png");
 		if (this->movesetPlayer.movendoEsquerda) 
 		{
-			this->posicao_x_tela -= 3;
+			if (this->posicao_x_tela > 0) {
+				this->posicao_x_tela -= 4;
+			}
 		}
 		else 
 		{
-			this->posicao_x_tela += 3;
+			if (this->posicao_x_tela < larguraTela - 75) {
+				this->posicao_x_tela += 4;
+			}
 		}
 		
 		this->delayTrocaDeFrame++;
