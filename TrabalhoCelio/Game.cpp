@@ -1,4 +1,4 @@
-//Include dos arquivos de cabeçalho
+//Include dos arquivos de cabeÃ§alho
 #include "Entity.h"
 #include "Mapa.h"
 
@@ -13,19 +13,25 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_video.h>
+#include <vector>
 
 //Include das bibliotecas C++
 #include <iostream>
+#include "Projetil.h"
 
 ALLEGRO_DISPLAY *telaGame = NULL;
 ALLEGRO_TIMER *fps = NULL;
 ALLEGRO_EVENT_QUEUE* filaEventos = NULL;
 ALLEGRO_SAMPLE* music = NULL;
+ALLEGRO_SAMPLE* shot = NULL;
 
 int delayAnimacao = 0;
+std::vector<Projectile> projectiles;
 
 Mapa mapa = Mapa();
 Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - 100, Moveset(), 0);
+
+bool lastMove = true; //false = left, true = right
 
 void inicializacao();
 void encerramento();
@@ -34,6 +40,8 @@ void inicializarAudio();
 void puloPersonagem();
 
 void testeColisao(int representacaoMapa[24][43]);
+
+void atirar();
 
 int main()
 {
@@ -74,24 +82,28 @@ int main()
 			{
 			case ALLEGRO_KEY_LEFT:
 				player.movesetPlayer.movendoEsquerda = true;
+				lastMove = false;
 				player.movesetPlayer.movendoDireita = false;
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_RIGHT:
 				player.movesetPlayer.movendoDireita = true;
+				lastMove = true;
 				player.movesetPlayer.movendoEsquerda = false;
 				player.flags = 0;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_D:
 				player.movesetPlayer.movendoDireita = true;
+				lastMove = true;
 				player.movesetPlayer.movendoEsquerda = false;
 				player.flags = 0;
 				player.frame_x = 0;
 				break;
 			case ALLEGRO_KEY_A:
 				player.movesetPlayer.movendoEsquerda = true;
+				lastMove = false;
 				player.movesetPlayer.movendoDireita = false;
 				player.flags = ALLEGRO_FLIP_HORIZONTAL;
 				player.frame_x = 0;
@@ -99,6 +111,9 @@ int main()
 			case ALLEGRO_KEY_SPACE:
 				puloPersonagem();
 				break;
+      case ALLEGRO_KEY_F:
+        atirar();
+        break;
 			}
 		}
 
@@ -137,7 +152,7 @@ int main()
 
 void inicializacao() 
 {
-	//Inicialização do Allegro e dos Addons
+	//InicializaÃ§Ã£o do Allegro e dos Addons
 	al_init();
 	al_init_font_addon();
 	al_init_primitives_addon();
@@ -150,7 +165,7 @@ void inicializacao()
 	al_init_native_dialog_addon();
 	al_init_video_addon();
 
-	//Inicialização do Display
+	//InicializaÃ§Ã£o do Display
 	al_set_new_display_flags(ALLEGRO_NOFRAME);
 	telaGame = al_create_display(mapa.larguraTela, mapa.alturaTela);
 	if (!telaGame) 
@@ -159,14 +174,14 @@ void inicializacao()
 		return;
 	}
 
-	//Inicialização do Timer do Game
+	//InicializaÃ§Ã£o do Timer do Game
 	fps = al_create_timer(1.0 / mapa.fpsGame);
 	if (!fps) {
 		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao criar o timer", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return;
 	}
 
-	//Inicialização da Fila de Eventos
+	//InicializaÃ§Ã£o da Fila de Eventos
 	filaEventos = al_create_event_queue();
 	if (!filaEventos) 
 	{
@@ -179,7 +194,7 @@ void inicializacao()
 	al_register_event_source(filaEventos, al_get_timer_event_source(fps));
 	al_register_event_source(filaEventos, al_get_keyboard_event_source());
 
-	//Inicialização do Audio
+	//InicializaÃ§Ã£o do Audio
 	inicializarAudio();
 }
 
@@ -190,17 +205,38 @@ void encerramento()
 	al_destroy_bitmap(player.imagemPersonagem);
 	al_destroy_bitmap(mapa.backgroundTela);
 	al_destroy_sample(music);
+	al_destroy_sample(shot);
 	al_destroy_timer(fps);
 	al_destroy_event_queue(filaEventos);
 }
 
 void atualizarLimparDesenharGame()
 {
-	al_clear_to_color(al_map_rgb(255, 255, 255));
-	al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
-	mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
-	al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
-	al_flip_display();
+    int i = 0;
+    al_clear_to_color(al_map_rgb(255, 255, 255));
+    al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
+    mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
+    al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
+    for (auto it = projectiles.begin(); it != projectiles.end();)
+    {
+        Projectile& projectile = *it;
+        i += 1;
+        projectile.x += projectile.x_velocity;
+        projectile.y += projectile.y_velocity;
+        al_draw_bitmap(projectile.image, projectile.x + 50, projectile.y, 0);
+		if (projectile.isOutOfBounds(mapa.larguraTela, mapa.alturaTela))
+		{
+			std::cout << "Destroyed a projectile"<< std::endl;
+			al_destroy_bitmap(projectile.image); // Deallocate the memory used by the bitmap
+			it = projectiles.erase(it);
+			std::cout << "Number of projectiles left: " << projectiles.size() << std::endl;
+		}
+        else
+        {
+            ++it;
+        }
+    }
+    al_flip_display();
 }
 
 void inicializarAudio() {
@@ -209,8 +245,12 @@ void inicializarAudio() {
 		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao carregar o audio", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return;
 	}
-
-	al_reserve_samples(1);
+	shot = al_load_sample("Assets/audio/shot.ogg");
+	if (!shot) {
+		al_show_native_message_box(telaGame, "ERRO", "ERRO", "Erro ao carregar o audio de tiro", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return;
+	}
+	al_reserve_samples(20);
 	al_play_sample(music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, 0);
 }
 
@@ -235,6 +275,24 @@ void testeColisao(int representacaoMapa[24][43])
     }
 }
 
+void atirar()
+{
+	al_play_sample(shot, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, 0);
+	// Create a new projectile at the player's position
+	Projectile proj = Projectile(player.posicao_x_tela, player.posicao_y_tela + 32, 5, 0, al_load_bitmap("Assets/Images/red_laser.png"));
+	// Add the projectile to the list of projectiles
+	projectiles.push_back(proj); // Uncomment this line to add the projectile to the list
+
+	Projectile& newProjectile = projectiles.back();
+	// Set the velocity of the projectile
+	if (lastMove) {
+		newProjectile.x_velocity = 5;
+	}
+	else {
+		newProjectile.x_velocity = -5;
+	}
+	newProjectile.y_velocity = 0; // Adjust the velocity as needed
+	
 void puloPersonagem() {
 	if (player.movesetPlayer.pulando == false && player.movesetPlayer.caindo == false)
 	{
