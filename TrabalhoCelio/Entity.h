@@ -23,6 +23,8 @@ class Entity
 
 		Moveset movesetPlayer;
 
+		bool teste = false;
+
 		Entity() {};
 
 		Entity(int fx, int fy, int lp, int ap, float px, float py, Moveset ms, int flags) {
@@ -39,6 +41,8 @@ class Entity
 		void carregarImagemPersonagem(ALLEGRO_BITMAP* imagemPersonagem);
 		void movimentacao(int larguraTela);
 		void movimentacaoParado();
+		void movimentacaoInimigo(int larguraTela);
+		void movimentacaoParadoInimigo();
 };
 
 void Entity::carregarImagemPersonagem(ALLEGRO_BITMAP* imagemPersonagem) {
@@ -94,4 +98,40 @@ void Entity::movimentacaoParado() {
 	}
 }
 
+void Entity::movimentacaoInimigo(int larguraTela) {
+	if (this->posicao_x_tela > 0 && !teste) 
+	{
+		this->imagemPersonagem = al_load_bitmap("Assets/Images/Enemies/InimigoCorrendo.png");
+		this->posicao_x_tela -= 0.7f;
+		if (this->posicao_x_tela <= 560) {
+			teste = true;
+			this->flags = ALLEGRO_FLIP_HORIZONTAL;
+		}
+	}
+	else {
+		this->posicao_x_tela += 0.7f;
+		if (this->posicao_x_tela >= 1200) {
+			teste = false;
+			this->flags = 0;
+		}
+	}
+}
 
+void Entity::movimentacaoParadoInimigo() {
+	if (!this->movesetPlayer.movendoDireita && !this->movesetPlayer.movendoEsquerda && !this->movesetPlayer.pulando)
+	{
+		this->delayTrocaDeFrame++;
+		if (this->delayTrocaDeFrame == 15)
+		{
+			if (this->frame_x < 460)
+			{
+				this->frame_x += 80;
+			}
+			else
+			{
+				this->frame_x = 0;
+			}
+			this->delayTrocaDeFrame = 0;
+		}
+	}
+}
