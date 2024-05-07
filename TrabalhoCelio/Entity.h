@@ -23,6 +23,8 @@ class Entity
 
 		Moveset movesetPlayer;
 
+		bool teste = false;
+
 		Entity() {};
 
 		Entity(int fx, int fy, int lp, int ap, float px, float py, Moveset ms, int flags) {
@@ -97,26 +99,21 @@ void Entity::movimentacaoParado() {
 }
 
 void Entity::movimentacaoInimigo(int larguraTela) {
-	if (this->posicao_x_tela > 90)
+	if (this->posicao_x_tela > 0 && !teste) 
 	{
 		this->imagemPersonagem = al_load_bitmap("Assets/Images/Enemies/InimigoCorrendo.png");
-		this->posicao_x_tela -= 4;
-			
-
-		this->delayTrocaDeFrame++;
-		if (this->delayTrocaDeFrame == 17)
-		{
-			this->frame_x += 80;
-			if (this->frame_x == 640)
-			{
-				this->frame_x = 0;
-			}
-			this->delayTrocaDeFrame = 0;
+		this->posicao_x_tela -= 0.7f;
+		if (this->posicao_x_tela <= 560) {
+			teste = true;
+			this->flags = ALLEGRO_FLIP_HORIZONTAL;
 		}
 	}
-	else
-	{
-		this->posicao_x_tela += 4;
+	else {
+		this->posicao_x_tela += 0.7f;
+		if (this->posicao_x_tela >= 1200) {
+			teste = false;
+			this->flags = 0;
+		}
 	}
 }
 

@@ -26,7 +26,7 @@ int delayAnimacao = 0;
 
 Mapa mapa = Mapa();
 Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - 100, Moveset(), 0);
-Entity inimigo = Entity(0, 0, 80, 64, mapa.larguraTela - 150, 0, Moveset(), 0);
+Entity inimigo = Entity(0, 0, 80, 64, mapa.larguraTela - 150, 160, Moveset(), 0);
 
 void inicializacao();
 void encerramento();
