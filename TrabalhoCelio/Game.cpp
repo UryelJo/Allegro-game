@@ -26,6 +26,7 @@ int delayAnimacao = 0;
 
 Mapa mapa = Mapa();
 Entity player = Entity(0, 0, 115, 72, 0, mapa.alturaTela - 100, Moveset(), 0);
+Entity inimigo = Entity(0, 0, 80, 64, mapa.larguraTela - 150, 0, Moveset(), 0);
 
 void inicializacao();
 void encerramento();
@@ -33,13 +34,14 @@ void atualizarLimparDesenharGame();
 void inicializarAudio();
 void puloPersonagem();
 
-void testeColisao(int representacaoMapa[24][43]);
+void colisaoEGravidade(int representacaoMapa[24][43]);
 
 int main()
 {
 	inicializacao();
 
 	player.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Parado.png"));
+	inimigo.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Enemies/InimigoParado.png"));
 	mapa.carregarBackground(al_load_bitmap("Assets/Images/background.jpg"));
 	mapa.chao.carregarImagemChao1(al_load_bitmap("Assets/Images/SpritesChao/Tile_01.png"));
 	mapa.chao.carregarImagemChao2(al_load_bitmap("Assets/Images/SpritesChao/Tile_02.png"));
@@ -103,7 +105,10 @@ int main()
 		}
 
 		player.movimentacao(mapa.larguraTela);
-		testeColisao(mapa.representacaoMapa);
+
+		inimigo.movimentacaoInimigo(mapa.larguraTela);
+		
+		colisaoEGravidade(mapa.representacaoMapa);
 
 		if (evento.type == ALLEGRO_EVENT_KEY_UP) 
 		{
@@ -129,6 +134,7 @@ int main()
 			player.imagemPersonagem = al_load_bitmap("Assets/Images/Parado.png");
 		}
 		player.movimentacaoParado();
+		inimigo.movimentacaoParadoInimigo();
 
 		atualizarLimparDesenharGame();
 	}
@@ -188,7 +194,18 @@ void encerramento()
 	//Encerramento do Allegro
 	al_destroy_display(telaGame);
 	al_destroy_bitmap(player.imagemPersonagem);
+	al_destroy_bitmap(inimigo.imagemPersonagem);
 	al_destroy_bitmap(mapa.backgroundTela);
+	al_destroy_bitmap(mapa.chao.imagemChao1);
+	al_destroy_bitmap(mapa.chao.imagemChao2);
+	al_destroy_bitmap(mapa.chao.imagemChao3);
+	al_destroy_bitmap(mapa.chao.imagemChao4);
+	al_destroy_bitmap(mapa.chao.imagemChao5);
+	al_destroy_bitmap(mapa.chao.imagemChao6);
+	al_destroy_bitmap(mapa.chao.imagemChao7);
+	al_destroy_bitmap(mapa.chao.imagemChao8);
+	al_destroy_bitmap(mapa.chao.imagemChao9);
+	al_destroy_bitmap(mapa.chao.imagemChao10);
 	al_destroy_sample(music);
 	al_destroy_timer(fps);
 	al_destroy_event_queue(filaEventos);
@@ -199,6 +216,7 @@ void atualizarLimparDesenharGame()
 	al_clear_to_color(al_map_rgb(255, 255, 255));
 	al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
 	mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
+	al_draw_bitmap_region(inimigo.imagemPersonagem, inimigo.frame_x, inimigo.frame_y, inimigo.alturaPlayer, inimigo.larguraPlayer, inimigo.posicao_x_tela, inimigo.posicao_y_tela, inimigo.flags);
 	al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
 	al_flip_display();
 }
@@ -214,7 +232,7 @@ void inicializarAudio() {
 	al_play_sample(music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, 0);
 }
 
-void testeColisao(int representacaoMapa[24][43])
+void colisaoEGravidade(int representacaoMapa[24][43])
 {
 	player.posicao_y_tela += 10;
     for (int y = 0; y <= (mapa.alturaTela / mapa.chao.tamanho); y++)
