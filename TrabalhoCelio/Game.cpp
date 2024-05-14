@@ -50,6 +50,7 @@ int main()
 
 	player.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Parado.png"));
 	inimigo.carregarImagemPersonagem(al_load_bitmap("Assets/Images/Enemies/InimigoParado.png"));
+
 	mapa.carregarBackground(al_load_bitmap("Assets/Images/background.jpg"));
 	mapa.chao.carregarImagemChao1(al_load_bitmap("Assets/Images/SpritesChao/Tile_01.png"));
 	mapa.chao.carregarImagemChao2(al_load_bitmap("Assets/Images/SpritesChao/Tile_02.png"));
@@ -113,16 +114,14 @@ int main()
 			case ALLEGRO_KEY_SPACE:
 				puloPersonagem();
 				break;
-      case ALLEGRO_KEY_F:
-        atirar();
-        break;
+			case ALLEGRO_KEY_F:
+				atirar();
+				break;
 			}
 		}
 
 		player.movimentacao(mapa.larguraTela);
-
-		inimigo.movimentacaoInimigo(mapa.larguraTela);
-		
+		inimigo.movimentacaoInimigo(mapa.larguraTela);	
 		colisaoEGravidade(mapa.representacaoMapa);
 
 		if (evento.type == ALLEGRO_EVENT_KEY_UP) 
@@ -210,6 +209,7 @@ void encerramento()
 	al_destroy_display(telaGame);
 	al_destroy_bitmap(player.imagemPersonagem);
 	al_destroy_bitmap(inimigo.imagemPersonagem);
+
 	al_destroy_bitmap(mapa.backgroundTela);
 	al_destroy_bitmap(mapa.chao.imagemChao1);
 	al_destroy_bitmap(mapa.chao.imagemChao2);
@@ -234,7 +234,7 @@ void atualizarLimparDesenharGame()
     al_draw_scaled_bitmap(mapa.backgroundTela, 0, 0, 1920, 1080, 0, 0, mapa.larguraTela, mapa.alturaTela, 0);
     mapa.construirMapa(mapa.representacaoMapa, mapa.larguraTela, mapa.alturaTela);
     al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
-    al_draw_bitmap_region(player.imagemPersonagem, player.frame_x, player.frame_y, player.alturaPlayer, player.larguraPlayer, player.posicao_x_tela, player.posicao_y_tela, player.flags);
+    al_draw_bitmap_region(inimigo.imagemPersonagem, inimigo.frame_x, inimigo.frame_y, inimigo.alturaPlayer, inimigo.larguraPlayer, inimigo.posicao_x_tela, inimigo.posicao_y_tela, inimigo.flags);
     for (auto it = projectiles.begin(); it != projectiles.end();)
     {
         Projectile& projectile = *it;
